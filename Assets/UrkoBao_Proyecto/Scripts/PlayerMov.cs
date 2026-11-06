@@ -17,11 +17,18 @@ public class PlayerMov : MonoBehaviour
     [SerializeField] private float gravedadCaida = 1.15f;
     [SerializeField] private float corteSalto = 2.2f;
 
+    [Header("Pared")]
+    [SerializeField] private float tiempoAgarrePared = 0.25f;
+    [SerializeField] private float velocidadBajadaPared = 2.5f;
+    [SerializeField] private float fuerzaSaltoPared = 10f;
+
     [Header("Suelo")]
     [SerializeField] private Transform sueloCheck;
     [SerializeField] private LayerMask capaSuelo;
 
     private Rigidbody2D rb;
+    private Collider2D col;
+
     private float direccion;
     private bool mantieneSalto;
     private bool enSuelo;
@@ -29,11 +36,17 @@ public class PlayerMov : MonoBehaviour
     private float coyote;
     private float buffer;
 
+    private bool deslizandoPared;
+    private bool agarreUsado;
+    private float tiempoPared;
+    private int direccionPared;
+
     private float Gravedad => 2f * alturaSalto / (tiempoCima * tiempoCima);
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+        col = GetComponent<Collider2D>();
     }
 
     private void Update()
@@ -50,8 +63,11 @@ public class PlayerMov : MonoBehaviour
             if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed)
                 direccion++;
 
-            pulsarSalto = Keyboard.current.spaceKey.wasPressedThisFrame  || Keyboard.current.wKey.wasPressedThisFrame;
-            mantieneSalto = Keyboard.current.spaceKey.isPressed || Keyboard.current.wKey.isPressed;           
+            pulsarSalto = Keyboard.current.spaceKey.wasPressedThisFrame ||
+                          Keyboard.current.wKey.wasPressedThisFrame;
+
+            mantieneSalto = Keyboard.current.spaceKey.isPressed ||
+                            Keyboard.current.wKey.isPressed;
         }
 
         if (Gamepad.current != null)
@@ -66,7 +82,7 @@ public class PlayerMov : MonoBehaviour
         }
 
         if (pulsarSalto)
-            buffer = 0.1f;
+            buffer = 0.2f;
     }
 
     private void FixedUpdate()
@@ -84,6 +100,42 @@ public class PlayerMov : MonoBehaviour
 
         Vector2 v = rb.linearVelocity;
 
+        // Detectar paredes
+        Bounds limites = col.bounds;
+
+        bool paredIzquierda = Physics2D.OverlapBox(
+            new Vector2(limites.min.x - 0.05f, limites.center.y),
+            new Vector2(0.12f, limites.size.y * 0.75f),
+            0f,
+            capaSuelo
+        );
+
+        bool paredDerecha = Physics2D.OverlapBox(
+            new Vector2(limites.max.x + 0.05f, limites.center.y),
+            new Vector2(0.12f, limites.size.y * 0.75f),
+            0f,
+            capaSuelo
+        );
+
+        bool tocandoPared = paredIzquierda || paredDerecha;
+
+        direccionPared = paredDerecha ? 1 : -1;
+
+        // Reiniciar el agarre al separarse de la pared
+        if (!tocandoPared)
+        {
+            deslizandoPared = false;
+            agarreUsado = false;
+        }
+
+        // Comenzar el agarre cuando estamos cayendo
+        if (!enSuelo && tocandoPared && v.y < 0f && !agarreUsado)
+        {
+            deslizandoPared = true;
+            agarreUsado = true;
+            tiempoPared = tiempoAgarrePared;
+        }
+
         // Movimiento horizontal
         float aceleracion = enSuelo
             ? (Mathf.Abs(direccion) > 0.01f
@@ -97,8 +149,33 @@ public class PlayerMov : MonoBehaviour
             aceleracion * dt
         );
 
-        // Salto
-        if (buffer > 0f && coyote > 0f)
+        // Wall Slide y Wall Jump
+        if (deslizandoPared)
+        {
+            tiempoPared -= dt;
+
+            if (tiempoPared > 0f)
+            {
+                v.y = Mathf.Max(v.y, -velocidadBajadaPared);
+
+                if (buffer > 0f)
+                {
+                    v.x = -direccionPared * fuerzaSaltoPared;
+                    v.y = Gravedad * tiempoCima;
+
+                    buffer = 0f;
+                    deslizandoPared = false;
+                    coyote = 0f;
+                }
+            }
+            else
+            {
+                deslizandoPared = false;
+            }
+        }
+
+        // Salto normal
+        else if (buffer > 0f && coyote > 0f)
         {
             v.y = Gravedad * tiempoCima;
             buffer = 0f;
@@ -109,7 +186,9 @@ public class PlayerMov : MonoBehaviour
         // Gravedad según la fase del salto
         float multiplicador = 1f;
 
-        if (v.y > 0f && !mantieneSalto)
+        if (deslizandoPared)
+            multiplicador = 0f;
+        else if (v.y > 0f && !mantieneSalto)
             multiplicador = corteSalto;
         else if (!enSuelo && Mathf.Abs(v.y) < 3f)
             multiplicador = 0.6f;
