@@ -103,23 +103,23 @@ public class PlayerMov : MonoBehaviour
         // Detectar paredes
         Bounds limites = col.bounds;
 
-        bool paredIzquierda = Physics2D.OverlapBox(
+        Collider2D paredIzquierda = DetectarPared(
             new Vector2(limites.min.x - 0.05f, limites.center.y),
-            new Vector2(0.12f, limites.size.y * 0.75f),
-            0f,
-            capaSuelo
+            new Vector2(0.12f, limites.size.y * 0.75f)
         );
 
-        bool paredDerecha = Physics2D.OverlapBox(
+        Collider2D paredDerecha = DetectarPared(
             new Vector2(limites.max.x + 0.05f, limites.center.y),
-            new Vector2(0.12f, limites.size.y * 0.75f),
-            0f,
-            capaSuelo
+            new Vector2(0.12f, limites.size.y * 0.75f)
         );
 
-        bool tocandoPared = paredIzquierda || paredDerecha;
+        bool tocandoPared = paredIzquierda != null || paredDerecha != null;
 
-        direccionPared = paredDerecha ? 1 : -1;
+        Collider2D paredActual = paredDerecha != null
+            ? paredDerecha
+            : paredIzquierda;
+
+        direccionPared = paredDerecha != null ? 1 : -1;
 
         // Reiniciar el agarre al separarse de la pared
         if (!tocandoPared)
@@ -128,7 +128,7 @@ public class PlayerMov : MonoBehaviour
             agarreUsado = false;
         }
 
-        // Comenzar el agarre cuando estamos cayendo
+        // Comenzar el agarre al caer contra una pared
         if (!enSuelo && tocandoPared && v.y < 0f && !agarreUsado)
         {
             deslizandoPared = true;
@@ -160,7 +160,11 @@ public class PlayerMov : MonoBehaviour
 
                 if (buffer > 0f)
                 {
-                    v.x = -direccionPared * fuerzaSaltoPared;
+                    BoostWall boost = paredActual != null ? paredActual.GetComponent<BoostWall>() : null;
+
+                    float fuerza = boost != null ? boost.fuerzaHorizontal : fuerzaSaltoPared;
+
+                    v.x = -direccionPared * fuerza;
                     v.y = Gravedad * tiempoCima;
 
                     buffer = 0f;
@@ -183,7 +187,7 @@ public class PlayerMov : MonoBehaviour
             enSuelo = false;
         }
 
-        // Gravedad según la fase del salto
+        // Gravedad
         float multiplicador = 1f;
 
         if (deslizandoPared)
@@ -201,6 +205,30 @@ public class PlayerMov : MonoBehaviour
         rb.linearVelocity = v;
 
         buffer = Mathf.Max(0f, buffer - dt);
+    }
+
+    // Detectar una pared y dar prioridad a las Super Walls
+    private Collider2D DetectarPared(Vector2 centro, Vector2 tamano)
+    {
+        Collider2D[] paredes = Physics2D.OverlapBoxAll(
+            centro,
+            tamano,
+            0f,
+            capaSuelo
+        );
+
+        Collider2D paredEncontrada = null;
+
+        foreach (Collider2D pared in paredes)
+        {
+            if (pared.GetComponent<BoostWall>() != null)
+                return pared;
+
+            if (paredEncontrada == null)
+                paredEncontrada = pared;
+        }
+
+        return paredEncontrada;
     }
 
     private void OnDrawGizmosSelected()
