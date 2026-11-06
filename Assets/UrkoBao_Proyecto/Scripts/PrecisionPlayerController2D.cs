@@ -55,6 +55,9 @@ public class PrecisionPlayerController2D : MonoBehaviour
 
             pulsarSalto = Keyboard.current.spaceKey.wasPressedThisFrame;
             mantieneSalto = Keyboard.current.spaceKey.isPressed;
+
+            pulsarSalto = Keyboard.current.wKey.wasPressedThisFrame;
+            mantieneSalto = Keyboard.current.wKey.isPressed;
         }
 
         if (Gamepad.current != null)
