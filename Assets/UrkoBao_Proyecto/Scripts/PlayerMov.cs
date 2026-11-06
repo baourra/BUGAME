@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(Rigidbody2D))]
-public class PrecisionPlayerController2D : MonoBehaviour
+public class PlayerMov : MonoBehaviour
 {
     [Header("Movimiento")]
     [SerializeField] private float velocidad = 10f;
@@ -29,8 +29,7 @@ public class PrecisionPlayerController2D : MonoBehaviour
     private float coyote;
     private float buffer;
 
-    private float Gravedad =>
-        2f * alturaSalto / (tiempoCima * tiempoCima);
+    private float Gravedad => 2f * alturaSalto / (tiempoCima * tiempoCima);
 
     private void Awake()
     {
@@ -45,19 +44,14 @@ public class PrecisionPlayerController2D : MonoBehaviour
 
         if (Keyboard.current != null)
         {
-            if (Keyboard.current.aKey.isPressed ||
-                Keyboard.current.leftArrowKey.isPressed)
+            if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed)
                 direccion--;
 
-            if (Keyboard.current.dKey.isPressed ||
-                Keyboard.current.rightArrowKey.isPressed)
+            if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed)
                 direccion++;
 
-            pulsarSalto = Keyboard.current.spaceKey.wasPressedThisFrame;
-            mantieneSalto = Keyboard.current.spaceKey.isPressed;
-
-            pulsarSalto = Keyboard.current.wKey.wasPressedThisFrame;
-            mantieneSalto = Keyboard.current.wKey.isPressed;
+            pulsarSalto = Keyboard.current.spaceKey.wasPressedThisFrame  || Keyboard.current.wKey.wasPressedThisFrame;
+            mantieneSalto = Keyboard.current.spaceKey.isPressed || Keyboard.current.wKey.isPressed;           
         }
 
         if (Gamepad.current != null)
