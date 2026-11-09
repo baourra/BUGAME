@@ -16,6 +16,11 @@ public class PlayerMov : MonoBehaviour
     [SerializeField] private float gravedadCaida = 1.15f;
     [SerializeField] private float corteSalto = 2.2f;
 
+    [Header("Doble Salto")]
+    [SerializeField] private int maxSaltosExtra = 1;
+    [SerializeField] private float fuerzaDobleSalto = 14.5f; // Fuerza vertical clara y marcada
+    [SerializeField] private bool redireccionInstantanea = true; // Permite virar en seco en el aire al saltar
+
     [Header("Pared")]
     [SerializeField] private float tiempoAgarrePared = 0.25f;
     [SerializeField] private float velocidadBajadaPared = 2.5f;
@@ -38,11 +43,14 @@ public class PlayerMov : MonoBehaviour
     private float coyote;
     private float buffer;
 
+    private int saltosExtraRestantes;
+    private bool esDobleSalto;
+
     private bool deslizandoPared;
     private bool agarreUsado;
     private float tiempoPared;
     private int direccionPared;
-    private float fuerzaActualPared; // <--- NUEVO: Guarda la fuerza de la pared que tocamos
+    private float fuerzaActualPared;
 
     private bool roofWalkActivo;
     private bool subiendoAntesDeColision;
@@ -108,12 +116,21 @@ public class PlayerMov : MonoBehaviour
             capaSuelo
         ) != null && rb.linearVelocity.y <= 0.05f;
 
-        coyote = enSuelo ? 0.09f : Mathf.Max(0f, coyote - dt);
+        if (enSuelo)
+        {
+            coyote = 0.09f;
+            saltosExtraRestantes = maxSaltosExtra;
+            esDobleSalto = false;
+        }
+        else
+        {
+            coyote = Mathf.Max(0f, coyote - dt);
+        }
 
         Vector2 v = rb.linearVelocity;
         Bounds limites = col.bounds;
 
-        // --- CAMBIO: Ahora guardamos el Collider2D para poder leer sus scripts ---
+        // Detectar paredes
         Collider2D colIzq = Physics2D.OverlapBox(
             new Vector2(limites.min.x - 0.05f, limites.center.y),
             new Vector2(0.12f, limites.size.y * 0.75f),
@@ -158,6 +175,8 @@ public class PlayerMov : MonoBehaviour
             buffer = 0f;
             coyote = 0f;
             deslizandoPared = false;
+            saltosExtraRestantes = maxSaltosExtra;
+            esDobleSalto = false;
         }
 
         // Comprobar si debemos soltar el techo
@@ -210,8 +229,9 @@ public class PlayerMov : MonoBehaviour
             deslizandoPared = true;
             agarreUsado = true;
             tiempoPared = tiempoAgarrePared;
+            saltosExtraRestantes = maxSaltosExtra;
+            esDobleSalto = false;
 
-            // --- CAMBIO: Revisar si la pared es una SuperWall ---
             Collider2D colPared = colDer != null ? colDer : colIzq;
             BoostWall boost = colPared.GetComponent<BoostWall>();
 
@@ -221,7 +241,7 @@ public class PlayerMov : MonoBehaviour
                 fuerzaActualPared = fuerzaSaltoPared;
         }
 
-        // Wall Jump
+        // Lógica de Saltos
         if (roofWalkActivo)
         {
             deslizandoPared = false;
@@ -236,13 +256,14 @@ public class PlayerMov : MonoBehaviour
 
                 if (buffer > 0f)
                 {
-                    // --- CAMBIO: Usar la fuerza dinámica en lugar de la fija ---
                     v.x = -direccionPared * fuerzaActualPared;
                     v.y = Gravedad * tiempoCima;
 
                     buffer = 0f;
                     deslizandoPared = false;
                     coyote = 0f;
+                    saltosExtraRestantes = maxSaltosExtra;
+                    esDobleSalto = false;
                 }
             }
             else
@@ -250,13 +271,29 @@ public class PlayerMov : MonoBehaviour
                 deslizandoPared = false;
             }
         }
-        else if (!roofWalkActivo && buffer > 0f && coyote > 0f)
+        else if (buffer > 0f && coyote > 0f)
         {
-            // Salto normal
+            // Salto normal desde el suelo
             v.y = Gravedad * tiempoCima;
             buffer = 0f;
             coyote = 0f;
             enSuelo = false;
+            esDobleSalto = false;
+        }
+        else if (buffer > 0f && saltosExtraRestantes > 0)
+        {
+            // Doble salto reactivo
+            v.y = fuerzaDobleSalto; // Limpia la caída previa e impulsa hacia arriba
+
+            if (redireccionInstantanea && Mathf.Abs(direccion) > 0.01f)
+            {
+                v.x = direccion * velocidad; // Viraje horizontal instantáneo
+            }
+
+            saltosExtraRestantes--;
+            buffer = 0f;
+            coyote = 0f;
+            esDobleSalto = true;
         }
 
         // Gravedad
@@ -264,12 +301,15 @@ public class PlayerMov : MonoBehaviour
 
         if (roofWalkActivo)
             multiplicador = 0f;
-        else if (v.y > 0f && !mantieneSalto)
+        else if (v.y > 0f && !mantieneSalto && !esDobleSalto)
             multiplicador = corteSalto;
         else if (!enSuelo && Mathf.Abs(v.y) < 3f)
             multiplicador = 0.6f;
         else if (v.y < 0f)
+        {
             multiplicador = gravedadCaida;
+            esDobleSalto = false;
+        }
 
         rb.gravityScale = Gravedad * multiplicador /
             Mathf.Max(0.01f, Mathf.Abs(Physics2D.gravity.y));
