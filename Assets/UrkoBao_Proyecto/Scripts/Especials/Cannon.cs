@@ -4,6 +4,21 @@ public class Cannon : MonoBehaviour
 {
     [Header("Configuración del Cañón")]
     public float fuerzaDisparo = 100f;
+    public float velocidadRotacion = 3f;
+    public float anguloMaximo = 45f;
+
+    private float rotacionBase;
+
+    private void Start()
+    {
+        rotacionBase = transform.eulerAngles.z;
+    }
+
+    private void Update()
+    {
+        float anguloActual = rotacionBase + Mathf.Sin(Time.time * velocidadRotacion) * anguloMaximo;
+        transform.rotation = Quaternion.Euler(0, 0, anguloActual);
+    }
 
     private void OnTriggerEnter2D(Collider2D col)
     {
@@ -11,8 +26,7 @@ public class Cannon : MonoBehaviour
 
         if (player != null)
         {
-            // Usamos transform.right (eje X) ya que el cañón apunta a la derecha
-            player.EnterCannon(transform.right, fuerzaDisparo, transform.position);
+            player.EnterCannon(transform, fuerzaDisparo, transform.position);
         }
     }
 }

@@ -15,8 +15,10 @@ public class PlayerMov : MonoBehaviour
     [SerializeField] private float tiempoCima = 0.43f;
     [SerializeField] private float gravedadCaida = 1.15f;
     [SerializeField] private float corteSalto = 2.2f;
+    [SerializeField] private float tiempoBufferSalto = 0.2f;
 
     [Header("Doble Salto")]
+    [SerializeField] private bool habilitarDobleSalto = true;
     [SerializeField] private int maxSaltosExtra = 1;
     [SerializeField] private float fuerzaDobleSalto = 14.5f;
     [SerializeField] private bool redireccionInstantanea = true;
@@ -56,10 +58,9 @@ public class PlayerMov : MonoBehaviour
     private bool subiendoAntesDeColision;
     private float tiempoTecho;
 
-    // Variables del Cañón
     private bool enCannon;
     private bool dispararCannon;
-    private Vector2 direccionCannon;
+    private Transform transformCannon;
     private float fuerzaCannon;
 
     private float Gravedad =>
@@ -95,20 +96,18 @@ public class PlayerMov : MonoBehaviour
             mantieneSalto |= Gamepad.current.buttonSouth.isPressed;
         }
 
-        // Lógica de disparo del cañón
         if (enCannon && pulsarSalto)
         {
             dispararCannon = true;
         }
         else if (pulsarSalto)
         {
-            buffer = 0.2f;
+            buffer = tiempoBufferSalto;
         }
     }
 
     private void FixedUpdate()
     {
-        // Interceptar físicas si estamos dentro del cañón
         if (enCannon)
         {
             if (dispararCannon)
@@ -118,20 +117,17 @@ public class PlayerMov : MonoBehaviour
                 buffer = 0f;
                 esDobleSalto = false;
 
-                // Disparo limpio
-                rb.linearVelocity = direccionCannon * fuerzaCannon;
+                rb.linearVelocity = transformCannon.right * fuerzaCannon;
                 return;
             }
             else
             {
-                // Congelado dentro del cañón esperando
                 rb.linearVelocity = Vector2.zero;
                 rb.gravityScale = 0f;
                 return;
             }
         }
 
-        // Físicas Normales
         float dt = Time.fixedDeltaTime;
 
         enSuelo = Physics2D.OverlapBox(
@@ -211,30 +207,6 @@ public class PlayerMov : MonoBehaviour
         {
             deslizandoPared = false;
         }
-        else if (deslizandoPared)
-        {
-            tiempoPared -= dt;
-            if (tiempoPared > 0f)
-            {
-                v.y = Mathf.Max(v.y, -velocidadBajadaPared);
-
-                if (buffer > 0f)
-                {
-                    v.x = -direccionPared * fuerzaSaltoPared;
-                    v.y = Gravedad * tiempoCima;
-
-                    buffer = 0f;
-                    deslizandoPared = false;
-                    coyote = 0f;
-                    saltosExtraRestantes = maxSaltosExtra;
-                    esDobleSalto = false;
-                }
-            }
-            else
-            {
-                deslizandoPared = false;
-            }
-        }
         else if (buffer > 0f && coyote > 0f)
         {
             v.y = Gravedad * tiempoCima;
@@ -243,7 +215,30 @@ public class PlayerMov : MonoBehaviour
             enSuelo = false;
             esDobleSalto = false;
         }
-        else if (buffer > 0f && saltosExtraRestantes > 0)
+        else if (!enSuelo && tocandoPared && buffer > 0f)
+        {
+            v.x = -direccionPared * fuerzaSaltoPared;
+            v.y = Gravedad * tiempoCima;
+
+            buffer = 0f;
+            deslizandoPared = false;
+            coyote = 0f;
+            saltosExtraRestantes = maxSaltosExtra;
+            esDobleSalto = false;
+        }
+        else if (deslizandoPared)
+        {
+            tiempoPared -= dt;
+            if (tiempoPared > 0f)
+            {
+                v.y = Mathf.Max(v.y, -velocidadBajadaPared);
+            }
+            else
+            {
+                deslizandoPared = false;
+            }
+        }
+        else if (habilitarDobleSalto && buffer > 0f && saltosExtraRestantes > 0)
         {
             v.y = fuerzaDobleSalto;
             if (redireccionInstantanea && Mathf.Abs(direccion) > 0.01f) v.x = direccion * velocidad;
@@ -274,19 +269,16 @@ public class PlayerMov : MonoBehaviour
         buffer = Mathf.Max(0f, buffer - dt);
     }
 
-    // Función pública que el cañón llama
-    public void EnterCannon(Vector2 direccion, float fuerza, Vector3 posicionCentro)
+    public void EnterCannon(Transform cannon, float fuerza, Vector3 posicionCentro)
     {
         if (enCannon) return;
 
         enCannon = true;
-        direccionCannon = direccion.normalized;
+        transformCannon = cannon;
         fuerzaCannon = fuerza;
 
-        // Te posiciona en el centro del cañón
         transform.position = posicionCentro;
 
-        // Recargas dobles saltos para poder moverte nada más salir disparado
         saltosExtraRestantes = maxSaltosExtra;
     }
 
