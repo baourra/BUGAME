@@ -22,6 +22,9 @@ public class PlayerMov : MonoBehaviour
     [SerializeField] private float velocidadBajadaPared = 2.5f;
     [SerializeField] private float fuerzaSaltoPared = 10f;
 
+    [Header("RoofWalk")]
+    [SerializeField] private float tiempoAgarreTecho = 1.2f;
+
     [Header("Suelo")]
     [SerializeField] private Transform sueloCheck;
     [SerializeField] private LayerMask capaSuelo;
@@ -41,7 +44,12 @@ public class PlayerMov : MonoBehaviour
     private float tiempoPared;
     private int direccionPared;
 
-    private float Gravedad => 2f * alturaSalto / (tiempoCima * tiempoCima);
+    private bool roofWalkActivo;
+    private bool subiendoAntesDeColision;
+    private float tiempoTecho;
+
+    private float Gravedad =>
+        2f * alturaSalto / (tiempoCima * tiempoCima);
 
     private void Awake()
     {
@@ -57,17 +65,21 @@ public class PlayerMov : MonoBehaviour
 
         if (Keyboard.current != null)
         {
-            if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed)
+            if (Keyboard.current.aKey.isPressed ||
+                Keyboard.current.leftArrowKey.isPressed)
                 direccion--;
 
-            if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed)
+            if (Keyboard.current.dKey.isPressed ||
+                Keyboard.current.rightArrowKey.isPressed)
                 direccion++;
 
-            pulsarSalto = Keyboard.current.spaceKey.wasPressedThisFrame ||
-                          Keyboard.current.wKey.wasPressedThisFrame;
+            pulsarSalto =
+                Keyboard.current.spaceKey.wasPressedThisFrame ||
+                Keyboard.current.wKey.wasPressedThisFrame;
 
-            mantieneSalto = Keyboard.current.spaceKey.isPressed ||
-                            Keyboard.current.wKey.isPressed;
+            mantieneSalto =
+                Keyboard.current.spaceKey.isPressed ||
+                Keyboard.current.wKey.isPressed;
         }
 
         if (Gamepad.current != null)
@@ -99,58 +111,113 @@ public class PlayerMov : MonoBehaviour
         coyote = enSuelo ? 0.09f : Mathf.Max(0f, coyote - dt);
 
         Vector2 v = rb.linearVelocity;
-
-        // Detectar paredes
         Bounds limites = col.bounds;
 
-        Collider2D paredIzquierda = DetectarPared(
+        // Detectar paredes
+        bool paredIzquierda = Physics2D.OverlapBox(
             new Vector2(limites.min.x - 0.05f, limites.center.y),
-            new Vector2(0.12f, limites.size.y * 0.75f)
-        );
+            new Vector2(0.12f, limites.size.y * 0.75f),
+            0f,
+            capaSuelo
+        ) != null;
 
-        Collider2D paredDerecha = DetectarPared(
+        bool paredDerecha = Physics2D.OverlapBox(
             new Vector2(limites.max.x + 0.05f, limites.center.y),
-            new Vector2(0.12f, limites.size.y * 0.75f)
-        );
+            new Vector2(0.12f, limites.size.y * 0.75f),
+            0f,
+            capaSuelo
+        ) != null;
 
-        bool tocandoPared = paredIzquierda != null || paredDerecha != null;
+        bool tocandoPared = paredIzquierda || paredDerecha;
+        direccionPared = paredDerecha ? 1 : -1;
 
-        Collider2D paredActual = paredDerecha != null
-            ? paredDerecha
-            : paredIzquierda;
+        // Detectar techo
+        bool tocandoTecho = Physics2D.OverlapBox(
+            new Vector2(limites.center.x, limites.max.y + 0.005f),
+            new Vector2(limites.size.x * 0.8f, 0.02f),
+            0f,
+            capaSuelo
+        ) != null;
 
-        direccionPared = paredDerecha != null ? 1 : -1;
-
-        // Reiniciar el agarre al separarse de la pared
-        if (!tocandoPared)
+        // Reiniciar agarre de pared al separarse
+        if (enSuelo || !tocandoPared)
         {
             deslizandoPared = false;
             agarreUsado = false;
         }
 
-        // Comenzar el agarre al caer contra una pared
-        if (!enSuelo && tocandoPared && v.y < 0f && !agarreUsado)
+        // Activar RoofWalk al tocar un techo mientras subimos
+        if (!roofWalkActivo &&
+            mantieneSalto &&
+            !enSuelo &&
+            tocandoTecho &&
+            (v.y > 0.01f || subiendoAntesDeColision))
+        {
+            roofWalkActivo = true;
+            tiempoTecho = tiempoAgarreTecho;
+            buffer = 0f;
+            coyote = 0f;
+            deslizandoPared = false;
+        }
+
+        // Comprobar si debemos soltar el techo
+        if (roofWalkActivo &&
+            (!mantieneSalto || !tocandoTecho ||
+             enSuelo || tiempoTecho <= 0f))
+        {
+            roofWalkActivo = false;
+        }
+
+        // Movimiento horizontal
+        if (roofWalkActivo)
+        {
+            v.x = Mathf.MoveTowards(
+                v.x,
+                direccion * velocidad,
+                (Mathf.Abs(direccion) > 0.01f
+                    ? aceleracionSuelo
+                    : frenadoSuelo) * dt
+            );
+
+            v.y = 0f;
+            tiempoTecho -= dt;
+
+            if (tiempoTecho <= 0f)
+                roofWalkActivo = false;
+        }
+        else
+        {
+            float aceleracion = enSuelo
+                ? (Mathf.Abs(direccion) > 0.01f
+                    ? aceleracionSuelo
+                    : frenadoSuelo)
+                : controlAire;
+
+            v.x = Mathf.MoveTowards(
+                v.x,
+                direccion * velocidad,
+                aceleracion * dt
+            );
+        }
+
+        // Wall Slide
+        if (!roofWalkActivo &&
+            !enSuelo &&
+            tocandoPared &&
+            v.y < 0f &&
+            !agarreUsado)
         {
             deslizandoPared = true;
             agarreUsado = true;
             tiempoPared = tiempoAgarrePared;
         }
 
-        // Movimiento horizontal
-        float aceleracion = enSuelo
-            ? (Mathf.Abs(direccion) > 0.01f
-                ? aceleracionSuelo
-                : frenadoSuelo)
-            : controlAire;
-
-        v.x = Mathf.MoveTowards(
-            v.x,
-            direccion * velocidad,
-            aceleracion * dt
-        );
-
-        // Wall Slide y Wall Jump
-        if (deslizandoPared)
+        // Wall Jump
+        if (roofWalkActivo)
+        {
+            deslizandoPared = false;
+        }
+        else if (deslizandoPared)
         {
             tiempoPared -= dt;
 
@@ -160,11 +227,7 @@ public class PlayerMov : MonoBehaviour
 
                 if (buffer > 0f)
                 {
-                    BoostWall boost = paredActual != null ? paredActual.GetComponent<BoostWall>() : null;
-
-                    float fuerza = boost != null ? boost.fuerzaHorizontal : fuerzaSaltoPared;
-
-                    v.x = -direccionPared * fuerza;
+                    v.x = -direccionPared * fuerzaSaltoPared;
                     v.y = Gravedad * tiempoCima;
 
                     buffer = 0f;
@@ -177,10 +240,9 @@ public class PlayerMov : MonoBehaviour
                 deslizandoPared = false;
             }
         }
-
-        // Salto normal
-        else if (buffer > 0f && coyote > 0f)
+        else if (!roofWalkActivo && buffer > 0f && coyote > 0f)
         {
+            // Salto normal
             v.y = Gravedad * tiempoCima;
             buffer = 0f;
             coyote = 0f;
@@ -190,7 +252,7 @@ public class PlayerMov : MonoBehaviour
         // Gravedad
         float multiplicador = 1f;
 
-        if (deslizandoPared)
+        if (roofWalkActivo)
             multiplicador = 0f;
         else if (v.y > 0f && !mantieneSalto)
             multiplicador = corteSalto;
@@ -204,31 +266,9 @@ public class PlayerMov : MonoBehaviour
 
         rb.linearVelocity = v;
 
+        subiendoAntesDeColision = !roofWalkActivo && v.y > 0.01f;
+
         buffer = Mathf.Max(0f, buffer - dt);
-    }
-
-    // Detectar una pared y dar prioridad a las Super Walls
-    private Collider2D DetectarPared(Vector2 centro, Vector2 tamano)
-    {
-        Collider2D[] paredes = Physics2D.OverlapBoxAll(
-            centro,
-            tamano,
-            0f,
-            capaSuelo
-        );
-
-        Collider2D paredEncontrada = null;
-
-        foreach (Collider2D pared in paredes)
-        {
-            if (pared.GetComponent<BoostWall>() != null)
-                return pared;
-
-            if (paredEncontrada == null)
-                paredEncontrada = pared;
-        }
-
-        return paredEncontrada;
     }
 
     private void OnDrawGizmosSelected()
