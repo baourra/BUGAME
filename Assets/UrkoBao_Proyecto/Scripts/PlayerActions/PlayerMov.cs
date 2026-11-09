@@ -183,7 +183,16 @@ public class PlayerMov : MonoBehaviour
 
         if (roofWalkActivo)
         {
-            v.x = Mathf.MoveTowards(v.x, direccion * velocidad, (Mathf.Abs(direccion) > 0.01f ? aceleracionSuelo : frenadoSuelo) * dt);
+            // Freno instantáneo si no hay input direccional para evitar inercias al agarrarse al techo
+            if (Mathf.Abs(direccion) < 0.01f)
+            {
+                v.x = 0f;
+            }
+            else
+            {
+                v.x = Mathf.MoveTowards(v.x, direccion * velocidad, aceleracionSuelo * dt);
+            }
+
             v.y = 0f;
             tiempoTecho -= dt;
             if (tiempoTecho <= 0f) roofWalkActivo = false;
