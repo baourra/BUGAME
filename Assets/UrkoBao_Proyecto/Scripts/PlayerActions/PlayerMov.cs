@@ -18,8 +18,8 @@ public class PlayerMov : MonoBehaviour
 
     [Header("Doble Salto")]
     [SerializeField] private int maxSaltosExtra = 1;
-    [SerializeField] private float fuerzaDobleSalto = 14.5f; // Fuerza vertical clara y marcada
-    [SerializeField] private bool redireccionInstantanea = true; // Permite virar en seco en el aire al saltar
+    [SerializeField] private float fuerzaDobleSalto = 14.5f;
+    [SerializeField] private bool redireccionInstantanea = true;
 
     [Header("Pared")]
     [SerializeField] private float tiempoAgarrePared = 0.25f;
@@ -38,6 +38,7 @@ public class PlayerMov : MonoBehaviour
 
     private float direccion;
     private bool mantieneSalto;
+    private bool pulsarSalto;
     private bool enSuelo;
 
     private float coyote;
@@ -50,11 +51,16 @@ public class PlayerMov : MonoBehaviour
     private bool agarreUsado;
     private float tiempoPared;
     private int direccionPared;
-    private float fuerzaActualPared;
 
     private bool roofWalkActivo;
     private bool subiendoAntesDeColision;
     private float tiempoTecho;
+
+    // Variables del Cañón
+    private bool enCannon;
+    private bool dispararCannon;
+    private Vector2 direccionCannon;
+    private float fuerzaCannon;
 
     private float Gravedad =>
         2f * alturaSalto / (tiempoCima * tiempoCima);
@@ -68,45 +74,64 @@ public class PlayerMov : MonoBehaviour
     private void Update()
     {
         direccion = 0f;
-        bool pulsarSalto = false;
+        pulsarSalto = false;
         mantieneSalto = false;
 
         if (Keyboard.current != null)
         {
-            if (Keyboard.current.aKey.isPressed ||
-                Keyboard.current.leftArrowKey.isPressed)
-                direccion--;
+            if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed) direccion--;
+            if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed) direccion++;
 
-            if (Keyboard.current.dKey.isPressed ||
-                Keyboard.current.rightArrowKey.isPressed)
-                direccion++;
-
-            pulsarSalto =
-                Keyboard.current.spaceKey.wasPressedThisFrame ||
-                Keyboard.current.wKey.wasPressedThisFrame;
-
-            mantieneSalto =
-                Keyboard.current.spaceKey.isPressed ||
-                Keyboard.current.wKey.isPressed;
+            pulsarSalto = Keyboard.current.spaceKey.wasPressedThisFrame || Keyboard.current.wKey.wasPressedThisFrame;
+            mantieneSalto = Keyboard.current.spaceKey.isPressed || Keyboard.current.wKey.isPressed;
         }
 
         if (Gamepad.current != null)
         {
             float stick = Gamepad.current.leftStick.x.ReadValue();
-
-            if (Mathf.Abs(stick) > Mathf.Abs(direccion))
-                direccion = stick;
+            if (Mathf.Abs(stick) > Mathf.Abs(direccion)) direccion = stick;
 
             pulsarSalto |= Gamepad.current.buttonSouth.wasPressedThisFrame;
             mantieneSalto |= Gamepad.current.buttonSouth.isPressed;
         }
 
-        if (pulsarSalto)
+        // Lógica de disparo del cañón
+        if (enCannon && pulsarSalto)
+        {
+            dispararCannon = true;
+        }
+        else if (pulsarSalto)
+        {
             buffer = 0.2f;
+        }
     }
 
     private void FixedUpdate()
     {
+        // Interceptar físicas si estamos dentro del cañón
+        if (enCannon)
+        {
+            if (dispararCannon)
+            {
+                enCannon = false;
+                dispararCannon = false;
+                buffer = 0f;
+                esDobleSalto = false;
+
+                // Disparo limpio
+                rb.linearVelocity = direccionCannon * fuerzaCannon;
+                return;
+            }
+            else
+            {
+                // Congelado dentro del cañón esperando
+                rb.linearVelocity = Vector2.zero;
+                rb.gravityScale = 0f;
+                return;
+            }
+        }
+
+        // Físicas Normales
         float dt = Time.fixedDeltaTime;
 
         enSuelo = Physics2D.OverlapBox(
@@ -130,45 +155,21 @@ public class PlayerMov : MonoBehaviour
         Vector2 v = rb.linearVelocity;
         Bounds limites = col.bounds;
 
-        // Detectar paredes
-        Collider2D colIzq = Physics2D.OverlapBox(
-            new Vector2(limites.min.x - 0.05f, limites.center.y),
-            new Vector2(0.12f, limites.size.y * 0.75f),
-            0f,
-            capaSuelo
-        );
-
-        Collider2D colDer = Physics2D.OverlapBox(
-            new Vector2(limites.max.x + 0.05f, limites.center.y),
-            new Vector2(0.12f, limites.size.y * 0.75f),
-            0f,
-            capaSuelo
-        );
+        Collider2D colIzq = Physics2D.OverlapBox(new Vector2(limites.min.x - 0.05f, limites.center.y), new Vector2(0.12f, limites.size.y * 0.75f), 0f, capaSuelo);
+        Collider2D colDer = Physics2D.OverlapBox(new Vector2(limites.max.x + 0.05f, limites.center.y), new Vector2(0.12f, limites.size.y * 0.75f), 0f, capaSuelo);
 
         bool tocandoPared = colIzq != null || colDer != null;
         direccionPared = colDer != null ? 1 : -1;
 
-        // Detectar techo
-        bool tocandoTecho = Physics2D.OverlapBox(
-            new Vector2(limites.center.x, limites.max.y + 0.005f),
-            new Vector2(limites.size.x * 0.8f, 0.02f),
-            0f,
-            capaSuelo
-        ) != null;
+        bool tocandoTecho = Physics2D.OverlapBox(new Vector2(limites.center.x, limites.max.y + 0.005f), new Vector2(limites.size.x * 0.8f, 0.02f), 0f, capaSuelo) != null;
 
-        // Reiniciar agarre de pared al separarse
         if (enSuelo || !tocandoPared)
         {
             deslizandoPared = false;
             agarreUsado = false;
         }
 
-        // Activar RoofWalk al tocar un techo mientras subimos
-        if (!roofWalkActivo &&
-            mantieneSalto &&
-            !enSuelo &&
-            tocandoTecho &&
-            (v.y > 0.01f || subiendoAntesDeColision))
+        if (!roofWalkActivo && mantieneSalto && !enSuelo && tocandoTecho && (v.y > 0.01f || subiendoAntesDeColision))
         {
             roofWalkActivo = true;
             tiempoTecho = tiempoAgarreTecho;
@@ -179,69 +180,33 @@ public class PlayerMov : MonoBehaviour
             esDobleSalto = false;
         }
 
-        // Comprobar si debemos soltar el techo
-        if (roofWalkActivo &&
-            (!mantieneSalto || !tocandoTecho ||
-             enSuelo || tiempoTecho <= 0f))
+        if (roofWalkActivo && (!mantieneSalto || !tocandoTecho || enSuelo || tiempoTecho <= 0f))
         {
             roofWalkActivo = false;
         }
 
-        // Movimiento horizontal
         if (roofWalkActivo)
         {
-            v.x = Mathf.MoveTowards(
-                v.x,
-                direccion * velocidad,
-                (Mathf.Abs(direccion) > 0.01f
-                    ? aceleracionSuelo
-                    : frenadoSuelo) * dt
-            );
-
+            v.x = Mathf.MoveTowards(v.x, direccion * velocidad, (Mathf.Abs(direccion) > 0.01f ? aceleracionSuelo : frenadoSuelo) * dt);
             v.y = 0f;
             tiempoTecho -= dt;
-
-            if (tiempoTecho <= 0f)
-                roofWalkActivo = false;
+            if (tiempoTecho <= 0f) roofWalkActivo = false;
         }
         else
         {
-            float aceleracion = enSuelo
-                ? (Mathf.Abs(direccion) > 0.01f
-                    ? aceleracionSuelo
-                    : frenadoSuelo)
-                : controlAire;
-
-            v.x = Mathf.MoveTowards(
-                v.x,
-                direccion * velocidad,
-                aceleracion * dt
-            );
+            float aceleracion = enSuelo ? (Mathf.Abs(direccion) > 0.01f ? aceleracionSuelo : frenadoSuelo) : controlAire;
+            v.x = Mathf.MoveTowards(v.x, direccion * velocidad, aceleracion * dt);
         }
 
-        // Wall Slide
-        if (!roofWalkActivo &&
-            !enSuelo &&
-            tocandoPared &&
-            v.y < 0f &&
-            !agarreUsado)
+        if (!roofWalkActivo && !enSuelo && tocandoPared && v.y < 0f && !agarreUsado)
         {
             deslizandoPared = true;
             agarreUsado = true;
             tiempoPared = tiempoAgarrePared;
             saltosExtraRestantes = maxSaltosExtra;
             esDobleSalto = false;
-
-            Collider2D colPared = colDer != null ? colDer : colIzq;
-            BoostWall boost = colPared.GetComponent<BoostWall>();
-
-            if (boost != null)
-                fuerzaActualPared = boost.fuerzaHorizontal;
-            else
-                fuerzaActualPared = fuerzaSaltoPared;
         }
 
-        // Lógica de Saltos
         if (roofWalkActivo)
         {
             deslizandoPared = false;
@@ -249,14 +214,13 @@ public class PlayerMov : MonoBehaviour
         else if (deslizandoPared)
         {
             tiempoPared -= dt;
-
             if (tiempoPared > 0f)
             {
                 v.y = Mathf.Max(v.y, -velocidadBajadaPared);
 
                 if (buffer > 0f)
                 {
-                    v.x = -direccionPared * fuerzaActualPared;
+                    v.x = -direccionPared * fuerzaSaltoPared;
                     v.y = Gravedad * tiempoCima;
 
                     buffer = 0f;
@@ -273,7 +237,6 @@ public class PlayerMov : MonoBehaviour
         }
         else if (buffer > 0f && coyote > 0f)
         {
-            // Salto normal desde el suelo
             v.y = Gravedad * tiempoCima;
             buffer = 0f;
             coyote = 0f;
@@ -282,21 +245,14 @@ public class PlayerMov : MonoBehaviour
         }
         else if (buffer > 0f && saltosExtraRestantes > 0)
         {
-            // Doble salto reactivo
-            v.y = fuerzaDobleSalto; // Limpia la caída previa e impulsa hacia arriba
-
-            if (redireccionInstantanea && Mathf.Abs(direccion) > 0.01f)
-            {
-                v.x = direccion * velocidad; // Viraje horizontal instantáneo
-            }
-
+            v.y = fuerzaDobleSalto;
+            if (redireccionInstantanea && Mathf.Abs(direccion) > 0.01f) v.x = direccion * velocidad;
             saltosExtraRestantes--;
             buffer = 0f;
             coyote = 0f;
             esDobleSalto = true;
         }
 
-        // Gravedad
         float multiplicador = 1f;
 
         if (roofWalkActivo)
@@ -311,24 +267,33 @@ public class PlayerMov : MonoBehaviour
             esDobleSalto = false;
         }
 
-        rb.gravityScale = Gravedad * multiplicador /
-            Mathf.Max(0.01f, Mathf.Abs(Physics2D.gravity.y));
-
+        rb.gravityScale = Gravedad * multiplicador / Mathf.Max(0.01f, Mathf.Abs(Physics2D.gravity.y));
         rb.linearVelocity = v;
 
         subiendoAntesDeColision = !roofWalkActivo && v.y > 0.01f;
-
         buffer = Mathf.Max(0f, buffer - dt);
+    }
+
+    // Función pública que el cañón llama
+    public void EnterCannon(Vector2 direccion, float fuerza, Vector3 posicionCentro)
+    {
+        if (enCannon) return;
+
+        enCannon = true;
+        direccionCannon = direccion.normalized;
+        fuerzaCannon = fuerza;
+
+        // Te posiciona en el centro del cañón
+        transform.position = posicionCentro;
+
+        // Recargas dobles saltos para poder moverte nada más salir disparado
+        saltosExtraRestantes = maxSaltosExtra;
     }
 
     private void OnDrawGizmosSelected()
     {
         if (sueloCheck == null) return;
-
         Gizmos.color = Color.green;
-        Gizmos.DrawWireCube(
-            sueloCheck.position,
-            new Vector2(0.7f, 0.12f)
-        );
+        Gizmos.DrawWireCube(sueloCheck.position, new Vector2(0.7f, 0.12f));
     }
 }
