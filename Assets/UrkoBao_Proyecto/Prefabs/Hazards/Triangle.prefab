@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7270208025541801798}
   - component: {fileID: 1603918434216582772}
-  - component: {fileID: 4251412405762340764}
+  - component: {fileID: 3750398124005013357}
   m_Layer: 0
   m_Name: Triangle_Hitbox
   m_TagString: Untagged
@@ -83,7 +83,7 @@ PolygonCollider2D:
       - {x: -0.5, y: -0.28866667}
       - {x: 0.5, y: -0.28866667}
   m_UseDelaunayMesh: 1
---- !u!114 &4251412405762340764
+--- !u!114 &3750398124005013357
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -94,7 +94,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c74cd7f17c98f3c45aa1ce8e5bf70740, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Pincho
+  m_EditorClassIdentifier: Assembly-CSharp::Hazard
 --- !u!1 &5711890441983282396
 GameObject:
   m_ObjectHideFlags: 0
