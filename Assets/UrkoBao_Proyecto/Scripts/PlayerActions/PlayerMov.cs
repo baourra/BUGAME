@@ -194,7 +194,14 @@ public class PlayerMov : MonoBehaviour
             v.x = Mathf.MoveTowards(v.x, direccion * velocidad, aceleracion * dt);
         }
 
-        if (!roofWalkActivo && !enSuelo && tocandoPared && v.y < 0f && !agarreUsado)
+        // Anular empuje horizontal contra paredes en el aire para eliminar fricción de Unity
+        if (!enSuelo && tocandoPared)
+        {
+            if (colIzq != null && v.x < 0f) v.x = 0f;
+            if (colDer != null && v.x > 0f) v.x = 0f;
+        }
+
+        if (!roofWalkActivo && !enSuelo && tocandoPared && v.y <= 0.05f && !agarreUsado)
         {
             deslizandoPared = true;
             agarreUsado = true;
@@ -231,7 +238,7 @@ public class PlayerMov : MonoBehaviour
             tiempoPared -= dt;
             if (tiempoPared > 0f)
             {
-                v.y = Mathf.Max(v.y, -velocidadBajadaPared);
+                v.y = -velocidadBajadaPared;
             }
             else
             {
@@ -276,10 +283,9 @@ public class PlayerMov : MonoBehaviour
         enCannon = true;
         transformCannon = cannon;
         fuerzaCannon = fuerza;
-
         transform.position = posicionCentro;
 
-        saltosExtraRestantes = maxSaltosExtra;
+        saltosExtraRestantes = 0;
     }
 
     private void OnDrawGizmosSelected()
