@@ -9,4 +9,11 @@ public class BotonJugar : MonoBehaviour
     {
         SceneManager.LoadScene(JuegoTests);
     }
+
+
+
+    public void SalirDelJuego()
+    {
+        Application.Quit();
+    }
 }
