@@ -1,4 +1,3 @@
-
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -43,6 +42,7 @@ public class PlayerMov : MonoBehaviour
     private bool agarreUsado;
     private float tiempoPared;
     private int direccionPared;
+    private float fuerzaActualPared; // <--- NUEVO: Guarda la fuerza de la pared que tocamos
 
     private bool roofWalkActivo;
     private bool subiendoAntesDeColision;
@@ -113,23 +113,23 @@ public class PlayerMov : MonoBehaviour
         Vector2 v = rb.linearVelocity;
         Bounds limites = col.bounds;
 
-        // Detectar paredes
-        bool paredIzquierda = Physics2D.OverlapBox(
+        // --- CAMBIO: Ahora guardamos el Collider2D para poder leer sus scripts ---
+        Collider2D colIzq = Physics2D.OverlapBox(
             new Vector2(limites.min.x - 0.05f, limites.center.y),
             new Vector2(0.12f, limites.size.y * 0.75f),
             0f,
             capaSuelo
-        ) != null;
+        );
 
-        bool paredDerecha = Physics2D.OverlapBox(
+        Collider2D colDer = Physics2D.OverlapBox(
             new Vector2(limites.max.x + 0.05f, limites.center.y),
             new Vector2(0.12f, limites.size.y * 0.75f),
             0f,
             capaSuelo
-        ) != null;
+        );
 
-        bool tocandoPared = paredIzquierda || paredDerecha;
-        direccionPared = paredDerecha ? 1 : -1;
+        bool tocandoPared = colIzq != null || colDer != null;
+        direccionPared = colDer != null ? 1 : -1;
 
         // Detectar techo
         bool tocandoTecho = Physics2D.OverlapBox(
@@ -210,6 +210,15 @@ public class PlayerMov : MonoBehaviour
             deslizandoPared = true;
             agarreUsado = true;
             tiempoPared = tiempoAgarrePared;
+
+            // --- CAMBIO: Revisar si la pared es una SuperWall ---
+            Collider2D colPared = colDer != null ? colDer : colIzq;
+            BoostWall boost = colPared.GetComponent<BoostWall>();
+
+            if (boost != null)
+                fuerzaActualPared = boost.fuerzaHorizontal;
+            else
+                fuerzaActualPared = fuerzaSaltoPared;
         }
 
         // Wall Jump
@@ -227,7 +236,8 @@ public class PlayerMov : MonoBehaviour
 
                 if (buffer > 0f)
                 {
-                    v.x = -direccionPared * fuerzaSaltoPared;
+                    // --- CAMBIO: Usar la fuerza dinámica en lugar de la fija ---
+                    v.x = -direccionPared * fuerzaActualPared;
                     v.y = Gravedad * tiempoCima;
 
                     buffer = 0f;
