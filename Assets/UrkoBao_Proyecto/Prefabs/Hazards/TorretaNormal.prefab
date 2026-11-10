@@ -540,5 +540,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Torreta
   prefabBala: {fileID: 3672203196004223068, guid: e975d930e4f775c45b0d45855629f21d, type: 3}
   puntoDisparo: {fileID: 4740487787187635192}
-  tiempoEntreDisparos: 2
+  tiempoEntreDisparos: 1
   retrasoInicial: 0

@@ -5,22 +5,22 @@ using UnityEngine.InputSystem;
 public class PlayerMov : MonoBehaviour
 {
     [Header("Movimiento")]
-    [SerializeField] private float velocidad = 10f;
-    [SerializeField] private float aceleracionSuelo = 110f;
-    [SerializeField] private float frenadoSuelo = 230f;
-    [SerializeField] private float controlAire = 45f;
+    [SerializeField] private float velocidad = 15f;
+    [SerializeField] private float aceleracionSuelo = 200f;
+    [SerializeField] private float frenadoSuelo = 300f;
+    [SerializeField] private float controlAire = 130f;
 
     [Header("Salto")]
-    [SerializeField] private float alturaSalto = 3.2f;
-    [SerializeField] private float tiempoCima = 0.43f;
-    [SerializeField] private float gravedadCaida = 1.15f;
+    [SerializeField] private float alturaSalto = 5f;
+    [SerializeField] private float tiempoCima = 0.4f;
+    [SerializeField] private float gravedadCaida = 2f;
     [SerializeField] private float corteSalto = 2.2f;
     [SerializeField] private float tiempoBufferSalto = 0.2f;
 
     [Header("Doble Salto")]
     [SerializeField] private bool habilitarDobleSalto = true;
     [SerializeField] private int maxSaltosExtra = 1;
-    [SerializeField] private float fuerzaDobleSalto = 14.5f;
+    [SerializeField] private float fuerzaDobleSalto = 22f;
     [SerializeField] private bool redireccionInstantanea = true;
 
     [Header("Pared")]
@@ -47,7 +47,6 @@ public class PlayerMov : MonoBehaviour
     private float buffer;
 
     private int saltosExtraRestantes;
-    private bool esDobleSalto;
 
     private bool deslizandoPared;
     private bool agarreUsado;
@@ -63,8 +62,7 @@ public class PlayerMov : MonoBehaviour
     private Transform transformCannon;
     private float fuerzaCannon;
 
-    private float Gravedad =>
-        2f * alturaSalto / (tiempoCima * tiempoCima);
+    private float Gravedad => 2f * alturaSalto / (tiempoCima * tiempoCima);
 
     private void Awake()
     {
@@ -115,7 +113,6 @@ public class PlayerMov : MonoBehaviour
                 enCannon = false;
                 dispararCannon = false;
                 buffer = 0f;
-                esDobleSalto = false;
 
                 rb.linearVelocity = transformCannon.right * fuerzaCannon;
                 return;
@@ -141,7 +138,6 @@ public class PlayerMov : MonoBehaviour
         {
             coyote = 0.09f;
             saltosExtraRestantes = maxSaltosExtra;
-            esDobleSalto = false;
         }
         else
         {
@@ -173,7 +169,6 @@ public class PlayerMov : MonoBehaviour
             coyote = 0f;
             deslizandoPared = false;
             saltosExtraRestantes = maxSaltosExtra;
-            esDobleSalto = false;
         }
 
         if (roofWalkActivo && (!mantieneSalto || !tocandoTecho || enSuelo || tiempoTecho <= 0f))
@@ -183,7 +178,6 @@ public class PlayerMov : MonoBehaviour
 
         if (roofWalkActivo)
         {
-            // Freno instantáneo si no hay input direccional para evitar inercias al agarrarse al techo
             if (Mathf.Abs(direccion) < 0.01f)
             {
                 v.x = 0f;
@@ -203,7 +197,6 @@ public class PlayerMov : MonoBehaviour
             v.x = Mathf.MoveTowards(v.x, direccion * velocidad, aceleracion * dt);
         }
 
-        // Anular empuje horizontal contra paredes en el aire para eliminar fricción de Unity
         if (!enSuelo && tocandoPared)
         {
             if (colIzq != null && v.x < 0f) v.x = 0f;
@@ -216,7 +209,6 @@ public class PlayerMov : MonoBehaviour
             agarreUsado = true;
             tiempoPared = tiempoAgarrePared;
             saltosExtraRestantes = maxSaltosExtra;
-            esDobleSalto = false;
         }
 
         if (roofWalkActivo)
@@ -229,7 +221,6 @@ public class PlayerMov : MonoBehaviour
             buffer = 0f;
             coyote = 0f;
             enSuelo = false;
-            esDobleSalto = false;
         }
         else if (!enSuelo && tocandoPared && buffer > 0f)
         {
@@ -240,7 +231,6 @@ public class PlayerMov : MonoBehaviour
             deslizandoPared = false;
             coyote = 0f;
             saltosExtraRestantes = maxSaltosExtra;
-            esDobleSalto = false;
         }
         else if (deslizandoPared)
         {
@@ -261,21 +251,19 @@ public class PlayerMov : MonoBehaviour
             saltosExtraRestantes--;
             buffer = 0f;
             coyote = 0f;
-            esDobleSalto = true;
         }
 
         float multiplicador = 1f;
 
         if (roofWalkActivo)
             multiplicador = 0f;
-        else if (v.y > 0f && !mantieneSalto && !esDobleSalto)
+        else if (v.y > 0f && !mantieneSalto)
             multiplicador = corteSalto;
         else if (!enSuelo && Mathf.Abs(v.y) < 3f)
             multiplicador = 0.6f;
         else if (v.y < 0f)
         {
             multiplicador = gravedadCaida;
-            esDobleSalto = false;
         }
 
         rb.gravityScale = Gravedad * multiplicador / Mathf.Max(0.01f, Mathf.Abs(Physics2D.gravity.y));
