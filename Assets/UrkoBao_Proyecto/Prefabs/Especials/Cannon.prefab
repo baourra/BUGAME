@@ -289,7 +289,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4f573434621e49040af710abe78510a8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Cannon
-  fuerzaDisparo: 80
+  fuerzaDisparo: 50
   velocidadRotacion: 3
   anguloMaximo: 75
 --- !u!61 &6188224671013069570

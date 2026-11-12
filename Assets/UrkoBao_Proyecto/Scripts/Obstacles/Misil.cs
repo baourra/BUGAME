@@ -2,11 +2,12 @@ using UnityEngine;
 
 public class Misil : MonoBehaviour
 {
-    [Header("Configuración del Misil")]
+    [Header("Configuracion del Misil")]
     [SerializeField] private float velocidad = 9f;
     [SerializeField] private float velocidadGiro = 250f;
     [SerializeField] private float tiempoVidaMaximo = 3f;
-    [SerializeField] private GameObject prefabExplosion; // Opcional: si está vacío, genera partículas automáticas
+    [SerializeField] private float radioExplosion = 2f;
+    [SerializeField] private GameObject prefabExplosion;
 
     private Transform objetivo;
     private Rigidbody2D rb;
@@ -22,6 +23,53 @@ public class Misil : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         layerSuelo = LayerMask.NameToLayer("Suelo");
         tiempoActual = 0f;
+
+        ConfigurarTrailRendererEnCola();
+    }
+
+    private void ConfigurarTrailRendererEnCola()
+    {
+        // Buscamos si ya existe un objeto llamado "PuntoTrail" en los hijos, si no, lo creamos en la cola
+        Transform puntoTrail = transform.Find("PuntoTrail");
+        if (puntoTrail == null)
+        {
+            GameObject objTrail = new GameObject("PuntoTrail");
+            objTrail.transform.SetParent(transform);
+
+            // Intentamos localizar el objeto "ColaMisil" para colocarlo ahi exacto, si no, se queda abajo
+            Transform cola = transform.Find("MisilCuerpo/ColaMisil");
+            if (cola != null)
+            {
+                objTrail.transform.position = cola.position;
+            }
+            else
+            {
+                objTrail.transform.localPosition = new Vector3(0f, -0.8f, 0f); // Ajusta esto si prefieres otra altura
+            }
+            puntoTrail = objTrail.transform;
+        }
+
+        TrailRenderer trail = puntoTrail.GetComponent<TrailRenderer>();
+        if (trail == null)
+        {
+            trail = puntoTrail.gameObject.AddComponent<TrailRenderer>();
+        }
+
+        trail.time = 0.25f;
+        trail.startWidth = 0.35f;
+        trail.endWidth = 0.05f;
+        trail.sortingOrder = 9;
+
+        Shader shader2D = Shader.Find("Universal Render Pipeline/2D/Sprite-Unlit-Default");
+        if (shader2D == null) shader2D = Shader.Find("Sprites/Default");
+        trail.material = new Material(shader2D);
+
+        Gradient gradiente = new Gradient();
+        gradiente.SetKeys(
+            new GradientColorKey[] { new GradientColorKey(Color.red, 0f), new GradientColorKey(new Color(1f, 0.5f, 0f), 1f) },
+            new GradientAlphaKey[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(0f, 1f) }
+        );
+        trail.colorGradient = gradiente;
     }
 
     private void FixedUpdate()
@@ -49,7 +97,6 @@ public class Misil : MonoBehaviour
     {
         if (haExplotado) return;
 
-        // Ignora la propia torreta al salir
         if (lanzadorOriginal != null && other.transform.IsChildOf(lanzadorOriginal.transform)) return;
 
         if (other.CompareTag("Player") || other.gameObject.layer == layerSuelo)
@@ -65,19 +112,20 @@ public class Misil : MonoBehaviour
 
         if (lanzadorOriginal != null) lanzadorOriginal.NotificarExplosionMisil();
 
-        if (prefabExplosion != null)
-        {
-            Instantiate(prefabExplosion, transform.position, Quaternion.identity);
-        }
-        else
-        {
-            GenerarExplosionAutomatica();
-        }
+        GameObject fx = prefabExplosion != null
+            ? Instantiate(prefabExplosion, transform.position, Quaternion.identity)
+            : GenerarExplosionAutomatica();
 
+        CircleCollider2D ondaExpansiva = fx.AddComponent<CircleCollider2D>();
+        ondaExpansiva.isTrigger = true;
+        ondaExpansiva.radius = radioExplosion;
+        fx.AddComponent<Hazard>();
+
+        Destroy(ondaExpansiva, 0.08f);
         Destroy(gameObject);
     }
 
-    private void GenerarExplosionAutomatica()
+    private GameObject GenerarExplosionAutomatica()
     {
         GameObject fx = new GameObject("ExplosionFX");
         fx.transform.position = transform.position;
@@ -89,14 +137,14 @@ public class Misil : MonoBehaviour
         main.duration = 0.25f;
         main.loop = false;
         main.startLifetime = 0.25f;
-        main.startSpeed = new ParticleSystem.MinMaxCurve(4f, 10f);
+        main.startSpeed = new ParticleSystem.MinMaxCurve(radioExplosion * 2f, radioExplosion * 4.5f);
         main.startSize = new ParticleSystem.MinMaxCurve(0.25f, 0.55f);
-        main.startColor = new ParticleSystem.MinMaxGradient(new Color(1f, 0.25f, 0f), new Color(1f, 0.75f, 0f));
+        main.startColor = new ParticleSystem.MinMaxGradient(new Color(1f, 0.50f, 0f), new Color(1f, 0.85f, 0f));
         main.stopAction = ParticleSystemStopAction.Destroy;
 
         var emission = ps.emission;
         emission.rateOverTime = 0f;
-        emission.SetBursts(new[] { new ParticleSystem.Burst(0f, 20) });
+        emission.SetBursts(new[] { new ParticleSystem.Burst(0f, 22) });
 
         var shape = ps.shape;
         shape.shapeType = ParticleSystemShapeType.Circle;
@@ -106,8 +154,15 @@ public class Misil : MonoBehaviour
         Shader shader2D = Shader.Find("Universal Render Pipeline/2D/Sprite-Unlit-Default");
         if (shader2D == null) shader2D = Shader.Find("Sprites/Default");
         renderer.material = new Material(shader2D);
-        renderer.sortingOrder = 10; // Asegura que se dibuje por delante de plataformas y fondo
+        renderer.sortingOrder = 10;
 
         ps.Play();
+        return fx;
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(transform.position, radioExplosion);
     }
 }

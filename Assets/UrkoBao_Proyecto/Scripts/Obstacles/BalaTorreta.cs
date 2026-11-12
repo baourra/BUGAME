@@ -3,39 +3,64 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody2D))]
 public class BalaTorreta : MonoBehaviour
 {
-    [Header("Configuración")]
+    [Header("Configuracion")]
     public float velocidad = 15f;
-    public LayerMask capaSuelo; // Aquí asignarás tu layer "Suelo"
+    public LayerMask capaSuelo;
 
     private Rigidbody2D rb;
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
-
-        // Lo hacemos cinemático para que la gravedad no le afecte, pero siga detectando colisiones
         rb.bodyType = RigidbodyType2D.Kinematic;
+
+        ConfigurarTrailRendererEnCola();
+    }
+
+    private void ConfigurarTrailRendererEnCola()
+    {
+        // Creamos un hijo trasero para que la estela salga desde la parte posterior de la bala
+        GameObject objTrail = new GameObject("PuntoTrailBala");
+        objTrail.transform.SetParent(transform);
+
+        // Colocamos el emisor hacia atras en el eje X (izquierda local) y centrado en Y (0)
+        objTrail.transform.localPosition = new Vector3(-0.4f, 0f, 0f);
+
+        TrailRenderer trail = objTrail.AddComponent<TrailRenderer>();
+        trail.time = 0.2f;
+        trail.startWidth = 0.25f;
+        trail.endWidth = 0.03f;
+
+        // Lo ponemos en orden -1 para que la estela quede por debajo del grafico de la bala
+        trail.sortingOrder = -1;
+
+        Shader shader2D = Shader.Find("Universal Render Pipeline/2D/Sprite-Unlit-Default");
+        if (shader2D == null) shader2D = Shader.Find("Sprites/Default");
+        trail.material = new Material(shader2D);
+
+        Gradient gradiente = new Gradient();
+        gradiente.SetKeys(
+            new GradientColorKey[] { new GradientColorKey(Color.yellow, 0f), new GradientColorKey(new Color(1f, 0.4f, 0f), 1f) },
+            new GradientAlphaKey[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(0f, 1f) }
+        );
+        trail.colorGradient = gradiente;
     }
 
     private void Start()
     {
-        // La bala avanza en la dirección "Derecha" local (transform.right)
         rb.linearVelocity = transform.right * velocidad;
-
-        // Autodestrucción de seguridad por si sale de la pantalla
         Destroy(gameObject, 5f);
     }
 
     private void OnTriggerEnter2D(Collider2D col)
     {
-        // 1. Si toca al jugador, lo mata
         PlayerMuerte muerte = col.GetComponent<PlayerMuerte>();
         if (muerte != null)
         {
             muerte.Morir();
+            Destroy(gameObject);
         }
 
-        // 2. Si toca una pared o el suelo, se destruye (compara la layer del objeto tocado)
         if ((capaSuelo.value & (1 << col.gameObject.layer)) > 0)
         {
             Destroy(gameObject);

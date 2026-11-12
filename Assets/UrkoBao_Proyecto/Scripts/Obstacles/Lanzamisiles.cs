@@ -8,8 +8,10 @@ public class Lanzamisiles : MonoBehaviour
     [SerializeField] private Transform puntoDeDisparo;
     [SerializeField] private LayerMask capaObstaculos;
 
-    [Header("Configuración")]
+    [Header("Configuracion de Vision y Grados")]
     [SerializeField] private float rangoVision = 15f;
+    [Range(0f, 360f)]
+    [SerializeField] private float anguloVisionTotal = 360f; // 360 para apuntar a todo alrededor, o menor (ej. 180) para un arco frontal
     [SerializeField] private float velocidadGiroCannon = 10f;
     [SerializeField] private float tiempoRecargaPostExplosion = 2f;
 
@@ -27,16 +29,28 @@ public class Lanzamisiles : MonoBehaviour
     {
         if (jugador == null) return;
 
-        if (Vector2.Distance(transform.position, jugador.position) <= rangoVision)
+        Vector2 vectorAlJugador = (Vector2)jugador.position - (Vector2)transform.position;
+        float distancia = vectorAlJugador.magnitude;
+
+        if (distancia <= rangoVision)
         {
-            Vector2 direccionAlJugador = (jugador.position - transform.position).normalized;
-            RaycastHit2D hit = Physics2D.Raycast(transform.position, direccionAlJugador, rangoVision, capaObstaculos);
+            // Comprobamos si esta dentro del angulo de vision permitido
+            Vector2 direccionAlJugador = vectorAlJugador.normalized;
 
-            if (hit.collider == null)
+            // Calculamos el angulo respecto hacia donde apunta la torreta (por defecto hacia arriba transform.up)
+            float anguloConFrente = Vector2.Angle(transform.up, direccionAlJugador);
+
+            if (anguloConFrente <= anguloVisionTotal / 2f)
             {
-                RotarHaciaJugador(direccionAlJugador);
+                // Comprobamos linea de vision (obstaculos)
+                RaycastHit2D hit = Physics2D.Raycast(transform.position, direccionAlJugador, distancia, capaObstaculos);
 
-                if (puedeDisparar && !misilActivoEnEscena) DispararMisil();
+                if (hit.collider == null)
+                {
+                    RotarHaciaJugador(direccionAlJugador);
+
+                    if (puedeDisparar && !misilActivoEnEscena) DispararMisil();
+                }
             }
         }
     }
@@ -71,7 +85,21 @@ public class Lanzamisiles : MonoBehaviour
 
     private void OnDrawGizmosSelected()
     {
-        Gizmos.color = Color.red;
+        // Dibuja el radio de alcance maximo en amarillo
+        Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, rangoVision);
+
+        // Dibuja el cono de vision en la escena para ver exactamente que grados abarca
+        Gizmos.color = Color.cyan;
+        int segmentos = 20;
+        float medioAngulo = anguloVisionTotal / 2f;
+        Quaternion rotIzq = Quaternion.Euler(0, 0, -medioAngulo);
+        Quaternion rotDer = Quaternion.Euler(0, 0, medioAngulo);
+
+        Vector3 dirIzq = rotIzq * transform.up * rangoVision;
+        Vector3 dirDer = rotDer * transform.up * rangoVision;
+
+        Gizmos.DrawLine(transform.position, transform.position + dirIzq);
+        Gizmos.DrawLine(transform.position, transform.position + dirDer);
     }
 }
