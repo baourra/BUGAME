@@ -127,12 +127,27 @@ public class PlayerMov : MonoBehaviour
 
         float dt = Time.fixedDeltaTime;
 
+        // --- SISTEMA RELATIVO DE ENTORNO (Limpio y Matemático) ---
+        Vector2 velocidadEntorno = Vector2.zero;
+        if (transform.parent != null)
+        {
+            Rigidbody2D rbPadre = transform.parent.GetComponent<Rigidbody2D>();
+            if (rbPadre != null) velocidadEntorno = rbPadre.linearVelocity;
+        }
+
+        // Aislamos la velocidad pura del jugador restando el impulso de la plataforma
+        Vector2 v = rb.linearVelocity - velocidadEntorno;
+
+        // Ahora podemos saber si cae de verdad respecto a la plataforma, no respecto al mundo
+        bool cayendo = v.y <= 0.05f;
+        // ---------------------------------------------------------
+
         enSuelo = Physics2D.OverlapBox(
             sueloCheck.position,
             new Vector2(0.7f, 0.12f),
             0f,
             capaSuelo
-        ) != null && rb.linearVelocity.y <= 0.05f;
+        ) != null && cayendo;
 
         if (enSuelo)
         {
@@ -144,7 +159,6 @@ public class PlayerMov : MonoBehaviour
             coyote = Mathf.Max(0f, coyote - dt);
         }
 
-        Vector2 v = rb.linearVelocity;
         Bounds limites = col.bounds;
 
         Collider2D colIzq = Physics2D.OverlapBox(new Vector2(limites.min.x - 0.05f, limites.center.y), new Vector2(0.12f, limites.size.y * 0.75f), 0f, capaSuelo);
@@ -178,14 +192,8 @@ public class PlayerMov : MonoBehaviour
 
         if (roofWalkActivo)
         {
-            if (Mathf.Abs(direccion) < 0.01f)
-            {
-                v.x = 0f;
-            }
-            else
-            {
-                v.x = Mathf.MoveTowards(v.x, direccion * velocidad, aceleracionSuelo * dt);
-            }
+            if (Mathf.Abs(direccion) < 0.01f) v.x = 0f;
+            else v.x = Mathf.MoveTowards(v.x, direccion * velocidad, aceleracionSuelo * dt);
 
             v.y = 0f;
             tiempoTecho -= dt;
@@ -203,7 +211,8 @@ public class PlayerMov : MonoBehaviour
             if (colDer != null && v.x > 0f) v.x = 0f;
         }
 
-        if (!roofWalkActivo && !enSuelo && tocandoPared && v.y <= 0.05f && !agarreUsado)
+        // Aquí usamos "cayendo" (relativo) para que deje agarrarse aunque la plataforma suba
+        if (!roofWalkActivo && !enSuelo && tocandoPared && cayendo && !agarreUsado)
         {
             deslizandoPared = true;
             agarreUsado = true;
@@ -237,7 +246,7 @@ public class PlayerMov : MonoBehaviour
             tiempoPared -= dt;
             if (tiempoPared > 0f)
             {
-                v.y = -velocidadBajadaPared;
+                v.y = -velocidadBajadaPared; // Velocidad de caída RELATIVA a la plataforma
             }
             else
             {
@@ -255,19 +264,15 @@ public class PlayerMov : MonoBehaviour
 
         float multiplicador = 1f;
 
-        if (roofWalkActivo)
-            multiplicador = 0f;
-        else if (v.y > 0f && !mantieneSalto)
-            multiplicador = corteSalto;
-        else if (!enSuelo && Mathf.Abs(v.y) < 3f)
-            multiplicador = 0.6f;
-        else if (v.y < 0f)
-        {
-            multiplicador = gravedadCaida;
-        }
+        if (roofWalkActivo) multiplicador = 0f;
+        else if (v.y > 0f && !mantieneSalto) multiplicador = corteSalto;
+        else if (!enSuelo && Mathf.Abs(v.y) < 3f) multiplicador = 0.6f;
+        else if (v.y < 0f) multiplicador = gravedadCaida;
 
         rb.gravityScale = Gravedad * multiplicador / Mathf.Max(0.01f, Mathf.Abs(Physics2D.gravity.y));
-        rb.linearVelocity = v;
+
+        // Sumamos la velocidad del entorno al final. Si saltas, sumarás el momentum de la plataforma (Super fluido)
+        rb.linearVelocity = v + velocidadEntorno;
 
         subiendoAntesDeColision = !roofWalkActivo && v.y > 0.01f;
         buffer = Mathf.Max(0f, buffer - dt);

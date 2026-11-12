@@ -24,27 +24,30 @@ public class MovingPlats : MonoBehaviour
 
         destinoActual = posObjetivo;
 
-        // Autoconfigurar el componente físico para sincronizarse con el jugador
+        // Autoconfigurar el componente físico
         rb = GetComponent<Rigidbody2D>();
         if (rb == null)
         {
             rb = gameObject.AddComponent<Rigidbody2D>();
         }
 
-        // Lo hacemos cinemático para que no le afecte la gravedad, pero mueva a los cuerpos que pise
+        // Fundamental que sea Kinematic para que aplique fuerza pero no caiga
         rb.bodyType = RigidbodyType2D.Kinematic;
         rb.interpolation = RigidbodyInterpolation2D.Interpolate;
     }
 
-    // Usamos FixedUpdate para que el movimiento de la plataforma vaya al mismo ritmo que la caída del jugador
     private void FixedUpdate()
     {
-        // MovePosition mueve la plataforma usando el motor de colisiones, eliminando el rebote
-        Vector2 nuevaPos = Vector2.MoveTowards(rb.position, destinoActual, velocidad * Time.fixedDeltaTime);
-        rb.MovePosition(nuevaPos);
+        // Aplicamos velocidad real al Rigidbody para que PlayerMov pueda leerla matemáticamente
+        Vector2 direccionHaciaObjetivo = (destinoActual - rb.position).normalized;
+        rb.linearVelocity = direccionHaciaObjetivo * velocidad;
 
-        if (Vector2.Distance(rb.position, destinoActual) < 0.01f)
+        // Comprobamos la distancia de forma precisa para evitar desincronizaciones y pasarnos de largo
+        float distanciaAlObjetivo = Vector2.Distance(rb.position, destinoActual);
+        if (distanciaAlObjetivo < (velocidad * Time.fixedDeltaTime))
         {
+            // Clavamos la posición para no derrapar, y cambiamos de objetivo
+            rb.position = destinoActual;
             destinoActual = (destinoActual == posInicial) ? posObjetivo : posInicial;
         }
     }
