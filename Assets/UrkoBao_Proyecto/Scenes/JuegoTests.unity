@@ -5758,6 +5758,63 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 68ebaad34eb73a142b7e32ecc02cf5a3, type: 3}
+--- !u!1001 &1937650135
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 371156205815845426, guid: f2851fbfbe6c4984db496e068b5089f6, type: 3}
+      propertyPath: m_Name
+      value: PenduloMaton
+      objectReference: {fileID: 0}
+    - target: {fileID: 8119528305640763186, guid: f2851fbfbe6c4984db496e068b5089f6, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -4.346756
+      objectReference: {fileID: 0}
+    - target: {fileID: 8119528305640763186, guid: f2851fbfbe6c4984db496e068b5089f6, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 29.972439
+      objectReference: {fileID: 0}
+    - target: {fileID: 8119528305640763186, guid: f2851fbfbe6c4984db496e068b5089f6, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8119528305640763186, guid: f2851fbfbe6c4984db496e068b5089f6, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8119528305640763186, guid: f2851fbfbe6c4984db496e068b5089f6, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8119528305640763186, guid: f2851fbfbe6c4984db496e068b5089f6, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8119528305640763186, guid: f2851fbfbe6c4984db496e068b5089f6, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8119528305640763186, guid: f2851fbfbe6c4984db496e068b5089f6, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8119528305640763186, guid: f2851fbfbe6c4984db496e068b5089f6, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8119528305640763186, guid: f2851fbfbe6c4984db496e068b5089f6, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: f2851fbfbe6c4984db496e068b5089f6, type: 3}
 --- !u!1 &1952102378
 GameObject:
   m_ObjectHideFlags: 0
@@ -6071,6 +6128,63 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 7835406890609514872, guid: 052b7b8732d797a4d8e690ceb244444f, type: 3}
   m_PrefabInstance: {fileID: 1438715971}
   m_PrefabAsset: {fileID: 0}
+--- !u!1001 &2100837878
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 371156205815845426, guid: f2851fbfbe6c4984db496e068b5089f6, type: 3}
+      propertyPath: m_Name
+      value: PenduloMaton (1)
+      objectReference: {fileID: 0}
+    - target: {fileID: 8119528305640763186, guid: f2851fbfbe6c4984db496e068b5089f6, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 37.85
+      objectReference: {fileID: 0}
+    - target: {fileID: 8119528305640763186, guid: f2851fbfbe6c4984db496e068b5089f6, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 29.900873
+      objectReference: {fileID: 0}
+    - target: {fileID: 8119528305640763186, guid: f2851fbfbe6c4984db496e068b5089f6, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8119528305640763186, guid: f2851fbfbe6c4984db496e068b5089f6, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8119528305640763186, guid: f2851fbfbe6c4984db496e068b5089f6, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8119528305640763186, guid: f2851fbfbe6c4984db496e068b5089f6, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8119528305640763186, guid: f2851fbfbe6c4984db496e068b5089f6, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8119528305640763186, guid: f2851fbfbe6c4984db496e068b5089f6, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8119528305640763186, guid: f2851fbfbe6c4984db496e068b5089f6, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8119528305640763186, guid: f2851fbfbe6c4984db496e068b5089f6, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: f2851fbfbe6c4984db496e068b5089f6, type: 3}
 --- !u!1 &2124070663
 GameObject:
   m_ObjectHideFlags: 0
@@ -6503,3 +6617,5 @@ SceneRoots:
   - {fileID: 1349542043}
   - {fileID: 701307407}
   - {fileID: 1092069684}
+  - {fileID: 1937650135}
+  - {fileID: 2100837878}
