@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 3361550019600977073}
   - component: {fileID: 3494298883437469231}
   m_Layer: 0
-  m_Name: Triangle (3)
+  m_Name: AlaDerecha
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -26,7 +26,7 @@ Transform:
   m_GameObject: {fileID: 554304025351345129}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.45000005, y: -0.13200027, z: 0}
+  m_LocalPosition: {x: 0.45000005, y: -0.2, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -101,9 +101,8 @@ GameObject:
   m_Component:
   - component: {fileID: 5951885495155285742}
   - component: {fileID: 1666228406767571122}
-  - component: {fileID: 3507498120227287697}
   - component: {fileID: 5013269361279678478}
-  - component: {fileID: 9165372625344462746}
+  - component: {fileID: 8015007343804147105}
   m_Layer: 0
   m_Name: MisilCuerpo
   m_TagString: Untagged
@@ -120,7 +119,7 @@ Transform:
   m_GameObject: {fileID: 2962958940201694373}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.45000005, y: 0.17160034, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1.3, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -188,33 +187,6 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
---- !u!50 &3507498120227287697
-Rigidbody2D:
-  serializedVersion: 5
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2962958940201694373}
-  m_BodyType: 0
-  m_Simulated: 1
-  m_UseFullKinematicContacts: 0
-  m_UseAutoMass: 0
-  m_Mass: 1
-  m_LinearDamping: 0
-  m_AngularDamping: 0.05
-  m_GravityScale: 0
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_Interpolate: 0
-  m_SleepingMode: 1
-  m_CollisionDetection: 1
-  m_Constraints: 0
 --- !u!70 &5013269361279678478
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
@@ -250,9 +222,9 @@ CapsuleCollider2D:
   m_CompositeOperation: 0
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: -0.00000047683716}
-  m_Size: {x: 0.89, y: 1.72}
+  m_Size: {x: 0.6, y: 1.8}
   m_Direction: 0
---- !u!114 &9165372625344462746
+--- !u!114 &8015007343804147105
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -261,12 +233,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 2962958940201694373}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 40f078cf8279aa94db2c2d1aa7c43259, type: 3}
+  m_Script: {fileID: 11500000, guid: c74cd7f17c98f3c45aa1ce8e5bf70740, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MisilTeledirigido
-  velocidad: 9
-  velocidadGiro: 300
-  tiempoVidaMaximo: 3
+  m_EditorClassIdentifier: Assembly-CSharp::Hazard
 --- !u!1 &3446076969425018270
 GameObject:
   m_ObjectHideFlags: 0
@@ -276,6 +245,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1818366746853188325}
+  - component: {fileID: 1666230990741644818}
+  - component: {fileID: 216257587571514120}
   m_Layer: 0
   m_Name: Misil
   m_TagString: Untagged
@@ -292,13 +263,55 @@ Transform:
   m_GameObject: {fileID: 3446076969425018270}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.95, y: 9.1784, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 0.7, y: 0.7, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 5951885495155285742}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!50 &1666230990741644818
+Rigidbody2D:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3446076969425018270}
+  m_BodyType: 0
+  m_Simulated: 1
+  m_UseFullKinematicContacts: 0
+  m_UseAutoMass: 0
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_GravityScale: 0
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_Interpolate: 0
+  m_SleepingMode: 1
+  m_CollisionDetection: 1
+  m_Constraints: 0
+--- !u!114 &216257587571514120
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3446076969425018270}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 40f078cf8279aa94db2c2d1aa7c43259, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MisilTeledirigido
+  velocidad: 9
+  velocidadGiro: 300
+  tiempoVidaMaximo: 3
 --- !u!1 &6002879393090759089
 GameObject:
   m_ObjectHideFlags: 0
@@ -310,7 +323,7 @@ GameObject:
   - component: {fileID: 4083441884921108227}
   - component: {fileID: 4962209182458496446}
   m_Layer: 0
-  m_Name: Triangle (2)
+  m_Name: AlaIzquierda
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -325,7 +338,7 @@ Transform:
   m_GameObject: {fileID: 6002879393090759089}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.45000005, y: -0.13200027, z: 0}
+  m_LocalPosition: {x: -0.45000005, y: -0.2, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -401,7 +414,7 @@ GameObject:
   - component: {fileID: 7689473536419343572}
   - component: {fileID: 7926630537448009924}
   m_Layer: 0
-  m_Name: Triangle
+  m_Name: ColaMisil
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -416,7 +429,7 @@ Transform:
   m_GameObject: {fileID: 8415062391503228528}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: -1.098, z: 0}
+  m_LocalPosition: {x: 0, y: -1.1, z: 0}
   m_LocalScale: {x: 0.66, y: 0.66, z: 0.66}
   m_ConstrainProportionsScale: 1
   m_Children: []

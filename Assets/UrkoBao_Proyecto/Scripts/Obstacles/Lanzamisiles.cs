@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class TorretaLanzamisiles : MonoBehaviour
+public class Lanzamisiles : MonoBehaviour
 {
     [Header("Referencias")]
     [SerializeField] private GameObject prefabMisil;
@@ -20,37 +20,23 @@ public class TorretaLanzamisiles : MonoBehaviour
     private void Start()
     {
         GameObject jugadorObj = GameObject.FindGameObjectWithTag("Player");
-        if (jugadorObj != null)
-        {
-            jugador = jugadorObj.transform;
-        }
-        else
-        {
-            Debug.LogError("¡La torreta no encuentra al jugador! Asegúrate de que el jugador tiene la Tag 'Player'.");
-        }
+        if (jugadorObj != null) jugador = jugadorObj.transform;
     }
 
     private void Update()
     {
         if (jugador == null) return;
 
-        float distancia = Vector2.Distance(transform.position, jugador.position);
-
-        if (distancia <= rangoVision)
+        if (Vector2.Distance(transform.position, jugador.position) <= rangoVision)
         {
             Vector2 direccionAlJugador = (jugador.position - transform.position).normalized;
             RaycastHit2D hit = Physics2D.Raycast(transform.position, direccionAlJugador, rangoVision, capaObstaculos);
 
-            bool veAlJugador = (hit.collider == null || hit.collider.GetComponent<PlayerMov>() != null);
-
-            if (veAlJugador)
+            if (hit.collider == null)
             {
                 RotarHaciaJugador(direccionAlJugador);
 
-                if (puedeDisparar && !misilActivoEnEscena)
-                {
-                    DispararMisil();
-                }
+                if (puedeDisparar && !misilActivoEnEscena) DispararMisil();
             }
         }
     }
@@ -59,12 +45,7 @@ public class TorretaLanzamisiles : MonoBehaviour
     {
         if (transformCannon == null) return;
 
-        float anguloZ = Mathf.Atan2(direccion.y, direccion.x) * Mathf.Rad2Deg;
-
-        // CORRECCIÓN: Si tu cañón está dibujado apuntando hacia arriba, restamos 90 grados.
-        // (Si al probarlo sigue apuntando de lado, cambia esto a anguloZ ;)
-        anguloZ -= 90f;
-
+        float anguloZ = Mathf.Atan2(direccion.y, direccion.x) * Mathf.Rad2Deg - 90f;
         Quaternion rotacionObjetivo = Quaternion.Euler(0f, 0f, anguloZ);
         transformCannon.rotation = Quaternion.Slerp(transformCannon.rotation, rotacionObjetivo, velocidadGiroCannon * Time.deltaTime);
     }
@@ -77,12 +58,7 @@ public class TorretaLanzamisiles : MonoBehaviour
         puedeDisparar = false;
 
         GameObject misilInstancia = Instantiate(prefabMisil, puntoDeDisparo.position, puntoDeDisparo.rotation);
-        MisilTeledirigido scriptMisil = misilInstancia.GetComponent<MisilTeledirigido>();
-
-        if (scriptMisil != null)
-        {
-            scriptMisil.Inicializar(jugador, this);
-        }
+        misilInstancia.GetComponent<Misil>()?.Inicializar(jugador, this);
     }
 
     public void NotificarExplosionMisil()
@@ -91,10 +67,7 @@ public class TorretaLanzamisiles : MonoBehaviour
         Invoke(nameof(HabilitarDisparo), tiempoRecargaPostExplosion);
     }
 
-    private void HabilitarDisparo()
-    {
-        puedeDisparar = true;
-    }
+    private void HabilitarDisparo() => puedeDisparar = true;
 
     private void OnDrawGizmosSelected()
     {
