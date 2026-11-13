@@ -8,6 +8,15 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/UrkoBao_Proyecto/Scenes/JuegoTests.unity
     guid: 8c9cfa26abfee488c85f1582747f6a02
+  - enabled: 1
+    path: Assets/UrkoBao_Proyecto/Scenes/UI y Menus/MenuInicial.unity
+    guid: 8d65b26cf6acc29438ea63f5d1d9d164
+  - enabled: 1
+    path: Assets/UrkoBao_Proyecto/Scenes/UI y Menus/LvlSelect.unity
+    guid: 69f57fecb985a9f43add9c44d7cf1447
+  - enabled: 1
+    path: Assets/UrkoBao_Proyecto/Scenes/Levels/Lvl01.unity
+    guid: 8546fbf1699028b4abc3ee06d9d503cb
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   m_UseUCBPForAssetBundles: 0
