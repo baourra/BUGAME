@@ -15,8 +15,35 @@ EditorBuildSettings:
     path: Assets/UrkoBao_Proyecto/Scenes/UI y Menus/LvlSelect.unity
     guid: 69f57fecb985a9f43add9c44d7cf1447
   - enabled: 1
-    path: Assets/UrkoBao_Proyecto/Scenes/Levels/Lvl01.unity
+    path: Assets/UrkoBao_Proyecto/Scenes/Levels/World01/W1-Lvl01.unity
     guid: 8546fbf1699028b4abc3ee06d9d503cb
+  - enabled: 1
+    path: Assets/UrkoBao_Proyecto/Scenes/Levels/World01/W1-Lvl02.unity
+    guid: 7f586b39d987361419caa8ae198544ec
+  - enabled: 1
+    path: Assets/UrkoBao_Proyecto/Scenes/Levels/World01/W1-Lvl03.unity
+    guid: ea673d2beb751174897455fd596be2eb
+  - enabled: 1
+    path: Assets/UrkoBao_Proyecto/Scenes/Levels/World01/W1-Lvl04.unity
+    guid: fee1cb68b86b58a4096651bc81534acd
+  - enabled: 1
+    path: Assets/UrkoBao_Proyecto/Scenes/Levels/World01/W1-Lvl05.unity
+    guid: f0bc865d16535824fa8fda4945712190
+  - enabled: 1
+    path: Assets/UrkoBao_Proyecto/Scenes/Levels/World01/W1-Lvl06.unity
+    guid: 230fe67e32960f54da83f604b682e2e9
+  - enabled: 1
+    path: Assets/UrkoBao_Proyecto/Scenes/Levels/World01/W1-Lvl07.unity
+    guid: c7c5d1502e392044d95dd6e1b7777272
+  - enabled: 1
+    path: Assets/UrkoBao_Proyecto/Scenes/Levels/World01/W1-Lvl08.unity
+    guid: 10123ca5696bcf5499c33d710fea3d82
+  - enabled: 1
+    path: Assets/UrkoBao_Proyecto/Scenes/Levels/World01/W1-Lvl09.unity
+    guid: 50d3d630e22a5014daf261f0519e770e
+  - enabled: 1
+    path: Assets/UrkoBao_Proyecto/Scenes/Levels/World01/W1-LvlBoss.unity
+    guid: 885be63dc92596e4aa48482576a830f1
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   m_UseUCBPForAssetBundles: 0
